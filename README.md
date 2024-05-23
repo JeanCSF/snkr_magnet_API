@@ -1,5 +1,5 @@
 # Snkr Magnet API
-## Como Usar
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 ### Instalação
 
 1. Clone o repositório:
@@ -107,3 +107,6 @@ Se você deseja contribuir com o projeto, siga estas etapas:
 3. Commit suas mudanças: `git commit -m 'Adicionando nova funcionalidade'`.
 4. Faça push para a branch: `git push origin feature/nova-funcionalidade`.
 5. Envie um pull request.
+
+## Licença
+Este projeto está licenciado sob a [Licença MIT](LICENSE).
