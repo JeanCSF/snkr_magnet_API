@@ -532,7 +532,10 @@ const sneakerController = {
             const nameQuery = {
                 $or: [
                     { sneakerTitle: regex },
-                    { productReference: regex }
+                    { productReference: regex },
+                    { brands: regex },
+                    { categories: regex },
+                    { store: regex }
                 ]
             };
 
