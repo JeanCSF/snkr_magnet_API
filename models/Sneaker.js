@@ -56,6 +56,10 @@ const sneakerSchema = new Schema({
     codeFromStore: {
         type: String,
         required: true
+    },
+    available: {
+        type: Boolean,
+        required: true
     }
 },
     { timestamps: true }

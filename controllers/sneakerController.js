@@ -1,7 +1,6 @@
 const { Sneaker: SneakerModel } = require("../models/Sneaker");
-const { removeAccents, removeDots, clearSneakerName } = require('../src/utils/');
 
-const coresRegex = {
+const colorsRegex = {
     "azul": /azul|blue|astral glow|turquesa|turquoise|aqua|storm|alaska|hongo bros|shanahan importado|scuba|teal|jade|heather|mistyc|misty|surf|prloin|navy|naval|marinho|aquatic|royal|indigo|vtgi|nindig|tecind|stormy|tiffany|cobalt|denim|sky|capri|lago drive|agosto|salute|selubl|blues|midnight|acqua|bwt|xswb|abb|dn1|xskb|wlk|obsidian|hyper/i,
     "cinza": /cinza|grey|gray|frost|astral glow|hongo bros|shanahan importado|mork|sea|salt|ice|quarry|magnet|cz|tbwf|egret|nuvem|glacier|gelo|nimbus|arctic|grigio|iron|rock|talc|satelite|grethr|chumbo|grefiv|grafite|graphite|dark pewter|eclipse|cobblestone|bwt|xswb|blg|xskb|nwd|xskr|dust/i,
     "branco": /branco|white|wht|allwhite|truewhite|rawwhite|clowhi|crywht|ftwwht|cwhite|reflection|frost|castanho|pb|sidestripeblack|astral glow|shanahan importado|bc\.neve|alloy|bco neve|sea|salt|orquidea|birch|ice|capri|bwt|wlm|xkwr|hdv|xswb|wbk|wtk|hbw|blw|bbw|bwb|nwd|wlk/i,
@@ -44,13 +43,15 @@ const sneakerController = {
             const startIndex = (page - 1) * limit;
             const endIndex = page * limit;
 
-            let query = {};
+            let query = {
+                available: true
+            };
             let sort = {};
 
             if (req.query.color) {
                 const colors = typeof req.query.color === 'string' ? [req.query.color] : req.query.color;
                 const colorQueries = colors.map(color => {
-                    const regex = new RegExp('\\b' + coresRegex[color].source + '\\b', 'gi');;
+                    const regex = new RegExp('\\b' + colorsRegex[color].source + '\\b', 'gi');;
                     if (regex) {
                         return { "colors": { $regex: regex } };
                     } else {
@@ -202,38 +203,6 @@ const sneakerController = {
         }
     },
 
-    getSimilar: async (req, res) => {
-        try {
-            const id = req.params.id;
-            const sneaker = await SneakerModel.findOne({ _id: id });
-            if (!sneaker) {
-                res.status(404).json({ msg: "Sneaker não encontrado" });
-                return;
-            }
-
-            let title = sneaker.sneakerTitle;
-            title = await clearSneakerName({
-                sneakerName: title,
-                brands: sneaker.brands,
-                categories: sneaker.categories,
-                productReference: sneaker.productReference,
-                colors: sneaker.colors
-            });
-            title = removeDots(title);
-            title = removeAccents(title);
-            title = title.replace(/[^\w\s]/gi, '')
-            title = title.split(' ')
-            console.log(title);
-
-            const regex = new RegExp('\\b' + title + '\\b', 'gi');
-            const similarSneakers = await SneakerModel.find({ _id: { $ne: sneaker._id }, sneakerTitle: { $regex: regex }, brands: { $in: sneaker.brands } });
-            res.json(similarSneakers);
-        } catch (error) {
-            console.log(error);
-            res.status(500).json({ msg: "Internal server error" });
-        }
-    },
-
     getStore: async (req, res) => {
         try {
             const store = req.params.store;
@@ -243,14 +212,15 @@ const sneakerController = {
             const endIndex = page * limit;
 
             let query = {
-                store: store
+                store: store,
+                available: true
             };
             let sort = {};
 
             if (req.query.color) {
                 const colors = typeof req.query.color === 'string' ? [req.query.color] : req.query.color;
                 const colorQueries = colors.map(color => {
-                    const regex = new RegExp('\\b' + coresRegex[color].source + '\\b', 'gi');;
+                    const regex = new RegExp('\\b' + colorsRegex[color].source + '\\b', 'gi');;
                     if (regex) {
                         return { "colors": { $regex: regex } };
                     } else {
@@ -336,7 +306,8 @@ const sneakerController = {
             const endIndex = page * limit;
 
             let query = {
-                brands: brand
+                brands: brand,
+                available: true
             };
 
             let sort = {};
@@ -344,7 +315,7 @@ const sneakerController = {
             if (req.query.color) {
                 const colors = typeof req.query.color === 'string' ? [req.query.color] : req.query.color;
                 const colorQueries = colors.map(color => {
-                    const regex = new RegExp('\\b' + coresRegex[color].source + '\\b', 'gi');;
+                    const regex = new RegExp('\\b' + colorsRegex[color].source + '\\b', 'gi');;
                     if (regex) {
                         return { "colors": { $regex: regex } };
                     } else {
@@ -430,7 +401,8 @@ const sneakerController = {
             const endIndex = page * limit;
 
             let query = {
-                categories: category
+                categories: category,
+                available: true
             };
 
             let sort = {};
@@ -438,7 +410,7 @@ const sneakerController = {
             if (req.query.color) {
                 const colors = typeof req.query.color === 'string' ? [req.query.color] : req.query.color;
                 const colorQueries = colors.map(color => {
-                    const regex = new RegExp('\\b' + coresRegex[color].source + '\\b', 'gi');;
+                    const regex = new RegExp('\\b' + colorsRegex[color].source + '\\b', 'gi');;
                     if (regex) {
                         return {
                             $or: [
@@ -529,30 +501,31 @@ const sneakerController = {
             const endIndex = page * limit;
 
             const regex = new RegExp('\\b' + search + '\\b', 'gi');
-            const nameQuery = {
+            const mainQuery = {
+                available: true,
                 $or: [
-                    { sneakerTitle: regex },
-                    { productReference: regex },
-                    { brands: regex },
-                    { categories: regex },
-                    { store: regex }
+                    { sneakerTitle: { $regex: regex } },
+                    { productReference: { $regex: regex } },
+                    { brands: { $regex: regex } },
+                    { categories: { $regex: regex } },
+                    { store: { $regex: regex } }
                 ]
             };
 
-            let query = nameQuery;
+            let query = mainQuery;
             let sort = {};
 
             if (req.query.color) {
                 const colors = typeof req.query.color === 'string' ? [req.query.color] : req.query.color;
                 const colorQueries = colors.map(color => {
-                    const regex = new RegExp('\\b' + coresRegex[color].source + '\\b', 'gi');
+                    const regex = new RegExp('\\b' + colorsRegex[color].source + '\\b', 'gi');
                     return { colors: { $regex: regex } };
                 });
 
                 if (colorQueries.length > 0) {
                     query = {
                         $and: [
-                            nameQuery,
+                            mainQuery,
                             { $or: colorQueries }
                         ]
                     };
