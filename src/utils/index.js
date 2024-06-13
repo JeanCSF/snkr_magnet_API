@@ -1,5 +1,8 @@
-function removeAccents(str) {
-    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+function normalizeString(str) {
+    return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9\s]/g, "");;
 }
 
 function removeDots(str) {
@@ -9,7 +12,7 @@ function removeDots(str) {
 async function clearSneakerName(sneakerNameObj) {
     const { sneakerName, brands, categories, productReference, colors } = sneakerNameObj;
 
-    let clearedSneakerName = removeAccents(sneakerName);
+    let clearedSneakerName = normalizeString(sneakerName);
     if (brands) {
         brands.forEach(brand => clearedSneakerName = clearedSneakerName.replace(brand, ''));
     }
@@ -40,7 +43,7 @@ async function clearSneakerName(sneakerNameObj) {
 }
 
 module.exports = {
-    removeAccents,
+    normalizeString,
     removeDots,
     clearSneakerName
 }
